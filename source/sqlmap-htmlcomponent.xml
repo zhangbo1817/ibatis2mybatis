@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="htmlcomponent">
+	<typeAlias alias="htmlcomponentBean" type="com.alibaba.china.mayaservice.dal.kaleido.dataobject.Htmlcomponent" />
+	<typeAlias alias="htmlcomponentItem" type="com.alibaba.china.mayaservice.dal.kaleido.dataobject.HtmlcomponentItem" />
+	<resultMap id="htmlcomponentBeanResult" class="htmlcomponentBean">
+        <result property="id"          column="ID" />
+        <result property="gmtCreate"   column="GMT_CREATE" />
+        <result property="gmtModified" column="GMT_MODIFIED" />
+        <result property="creator"     column="CREATOR" />
+        <result property="name"        column="NAME" />
+        <result property="type"        column="TYPE" />
+        <result property="pretext"     column="PRETEXT" />
+        <result property="posttext"    column="POSTTEXT" />
+        <result property="itemid"      column="ITEMID" />
+        <result property="properties"  column="PROPERTIES" />
+        <result property="parentid"    column="PARENTID" />
+        <result property="modifier"    column="MODIFIER" />
+        <result property="isopen"      column="ISOPEN" />
+        <result property="sceneid"     column="SCENEID" />
+        <result property="sort"        column="SORT" />
+        <result property="source"      column="SOURCE" />
+	</resultMap>
+	
+	<resultMap id="htmlComponentItemResult" class="htmlcomponentItem">
+		 <result property="name"        column="NAME" />
+		 <result property="mkcmapping"  column="MKCMAPPING" />
+		 <result property="type"        column="TYPE" />
+	</resultMap>
+	
+	<sql id="selectHtmlcomponentBeanSql">
+		<![CDATA[
+			select t.id, t.gmt_create, t.gmt_modified, t.creator, t.name, 
+			       t.type, t.pretext, t.posttext, t.itemid, t.properties, 
+			       t.parentid, t.modifier, t.isopen, t.sceneid, t.sort, t.source 
+			  from mkc_htmlcomponent t
+		]]>
+	</sql>
+	
+	<select id="findInitHtmlcomponentsBySceneID" parameterClass="java.util.HashMap" resultClass="htmlcomponentBean">
+	     <dynamic>
+		    <isNotEmpty property="sourceType">
+		        select t.id, t.name, t.type, t.pretext, t.posttext, t.itemid, t.properties, t.parentid, t.sort, t.isopen, t.source
+                  from mkc_htmlcomponent t
+                 where t.source = #sourceType#
+                 union all
+		    </isNotEmpty>
+		</dynamic>
+	    <![CDATA[
+		    select t.id, t.name, t.type, t.pretext, t.posttext, t.itemid, t.properties, t.parentid, t.sort, t.isopen, t.source
+              from mkc_htmlcomponent t 
+             where t.source in
+        ]]>
+        <iterate property="promotionSources" open="(" close=")" conjunction=",">
+			#promotionSources[]#
+		</iterate>
+        <![CDATA[    
+               and t.sceneid = #sceneID# 
+	    ]]>
+	</select>
+	
+	<select id="findHtmlcomponentsBySceneID" parameterClass="java.util.HashMap" resultClass="htmlcomponentBean">
+	     <dynamic>
+		    <isNotEmpty property="sourceType">
+		        select t.id, t.name, t.type, t.pretext, t.posttext, t.itemid, t.properties, t.parentid, t.sort, t.isopen, t.source
+                  from mkc_htmlcomponent t
+                 where t.source = #sourceType#
+                 union all
+		    </isNotEmpty>
+		</dynamic>
+	    <![CDATA[
+		    select t.id, t.name, t.type, t.pretext, t.posttext, t.itemid, t.properties, t.parentid, t.sort, t.isopen, t.source
+              from mkc_htmlcomponent t 
+             inner join (select r.itemb from mkc_relation r where r.type = #type# and r.itema = #sceneID#) r
+                on t.id = r.itemb
+             where t.source in
+	    ]]>
+	    <iterate property="promotionSources" open="(" close=")" conjunction=",">
+			#promotionSources[]#
+		</iterate>
+	</select>
+	
+	<select id="findHtmlcomponentsByType" parameterClass="java.util.HashMap" resultClass="htmlcomponentBean">
+	    <dynamic>
+		    <isNotEmpty property="sourceType">
+		        select t.id, t.name, t.type, t.pretext, t.posttext, t.itemid, t.properties, t.parentid, t.sort, t.isopen, t.source
+                  from mkc_htmlcomponent t
+                 where t.source = #sourceType#
+                 union all
+		    </isNotEmpty>
+		</dynamic>
+	    <![CDATA[
+            select t.id, t.name, t.type, t.pretext, t.posttext, t.itemid, t.properties, t.parentid, t.sort, t.isopen, t.source
+              from mkc_htmlcomponent t 
+             inner join (select s.id from mkc_scene s where s.state = #state# and s.type = #type#) s
+                on t.sceneid = s.id
+             where t.source in
+	    ]]>
+	    <iterate property="promotionSources" open="(" close=")" conjunction=",">
+			#promotionSources[]#
+		</iterate>
+	</select>
+	
+	<select id="findHtmlcomponentsBySourceID" parameterClass="java.util.HashMap" resultClass="htmlcomponentBean">
+	    <![CDATA[
+			select t.id, t.name, t.type, t.pretext, t.posttext, t.itemid, t.properties, t.parentid, t.sort, t.isopen, t.source 
+              from mkc_htmlcomponent t
+             inner join (select s.id from mkc_scene s 
+                          inner join (select ss.source_type from mkc_scene ss where ss.id = #sceneID#) ss
+                             on s.type = ss.source_type) s
+                on t.sceneid = s.id
+		]]>
+	</select>
+	
+	<select id="findHtmlcomponentBeanById" parameterClass="Long" resultMap="htmlcomponentBeanResult">
+	    <include refid="selectHtmlcomponentBeanSql"/>
+		<![CDATA[
+			where t.id = #id#
+		]]>
+	</select>
+	
+	<select id="findHtmlcomponentBeanByWhere" parameterClass="htmlcomponentBean" resultMap="htmlcomponentBeanResult">
+	    <include refid="selectHtmlcomponentBeanSql"/>
+	    <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="creator">
+                t.creator = #creator#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="modifier">
+                t.modifier = #modifier#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="isopen">
+                t.isopen = #isopen#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="name">
+                t.name = #name#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="codes">
+                t.name in
+                <iterate property="codes" open="(" close=")" conjunction=",">
+					#codes[]#
+				</iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="type">
+                t.type = #type#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="pretext">
+                t.pretext = #pretext#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="posttext">
+                t.posttext = #posttext#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="itemid">
+                t.itemid = #itemid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="parentid">
+                t.parentid = #parentid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="sceneid">
+                t.sceneid = #sceneid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="source">
+                t.source = #source#
+            </isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<select id="findHtmlcomponentCountByWhere" parameterClass="htmlcomponentBean" resultClass="Integer">
+	   <![CDATA[
+			select count(*) 
+			  from mkc_htmlcomponent t
+		]]>
+	    <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="creator">
+                t.creator = #creator#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="modifier">
+                t.modifier = #modifier#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="isopen">
+                t.isopen = #isopen#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="name">
+                t.name = #name#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="codes">
+                t.name in
+                <iterate property="codes" open="(" close=")" conjunction=",">
+					#codes[]#
+				</iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="type">
+                t.type = #type#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="pretext">
+                t.pretext = #pretext#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="posttext">
+                t.posttext = #posttext#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="itemid">
+                t.itemid = #itemid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="parentid">
+                t.parentid = #parentid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="sceneid">
+                t.sceneid = #sceneid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="source">
+                t.source = #source#
+            </isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<insert id="insertHtmlcomponentBean" parameterClass="htmlcomponentBean">
+	    insert into mkc_htmlcomponent
+	    <dynamic prepend="(">
+            <isNotEmpty prepend="," property="gmtCreate">
+                gmt_create
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="gmtModified">
+                gmt_modified
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="creator">
+                creator
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="name">
+                name
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="type">
+                type
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="pretext">
+                pretext
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="posttext">
+                posttext
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="itemid">
+                itemid
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="properties">
+                properties
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="parentid">
+                parentid
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="modifier">
+                modifier
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="isopen">
+                isopen
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="sceneid">
+                sceneid
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="sort">
+                sort
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="source">
+                source
+            </isNotEmpty>
+	    </dynamic>
+	    <dynamic prepend=") values (">
+            <isNotEmpty prepend="," property="gmtCreate">
+                #gmtCreate#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="gmtModified">
+                #gmtModified#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="creator">
+                #creator#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="name">
+                #name#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="type">
+                #type#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="pretext">
+                #pretext#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="posttext">
+                #posttext#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="itemid">
+                #itemid#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="properties">
+                #properties#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="parentid">
+                #parentid#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="modifier">
+                #modifier#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="isopen">
+                #isopen#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="sceneid">
+                #sceneid#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="sort">
+                #sort#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="source">
+                #source#
+            </isNotEmpty>
+	    </dynamic>)
+	    <selectKey keyProperty="id" resultClass="java.lang.Long">
+			select last_insert_id() as value
+	    </selectKey>  
+	</insert>
+	
+	<update id="updateHtmlcomponentBean" parameterClass="htmlcomponentBean">
+		update mkc_htmlcomponent t
+        <dynamic prepend="set">
+            <isNotEmpty prepend="," property="gmtCreate">
+                t.gmt_create = #gmtCreate#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="gmtModified">
+                t.gmt_modified = #gmtModified#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="creator">
+                t.creator = #creator#
+            </isNotEmpty>
+            <isNotEmpty prepend="," property="name">
+                t.name = #name#
+            </isNotEmpty>
+            <isNotNull prepend="," property="type">
+                t.type = #type#
+            </isNotNull>
+            <isNotNull prepend="," property="pretext">
+                t.pretext = #pretext#
+            </isNotNull>
+            <isNotNull prepend="," property="posttext">
+                t.posttext = #posttext#
+            </isNotNull>
+            <isNotNull prepend="," property="itemid">
+                t.itemid = #itemid#
+            </isNotNull>
+            <isNotNull prepend="," property="properties">
+                t.properties = #properties#
+            </isNotNull>
+            <isNotNull prepend="," property="parentid">
+                t.parentid = #parentid#
+            </isNotNull>
+            <isNotNull prepend="," property="modifier">
+                t.modifier = #modifier#
+            </isNotNull>
+            <isNotNull prepend="," property="isopen">
+                t.isopen = #isopen#
+            </isNotNull>
+            <isNotNull prepend="," property="sceneid">
+                t.sceneid = #sceneid#
+            </isNotNull>
+            <isNotNull prepend="," property="source">
+                t.source = #source#
+            </isNotNull>
+            <isNotNull prepend="," property="sort">
+                t.sort = #sort#
+            </isNotNull>
+        </dynamic>
+        <![CDATA[
+		   where t.id = #id#
+		]]>  
+	</update>
+	
+	<delete id="deleteHtmlcomponentBean" parameterClass="Long">
+	    <![CDATA[
+		  delete from mkc_htmlcomponent where id = #id#
+		]]>  
+	</delete>
+	
+	<select id="getChildHtmlComponents" parameterClass="Long" resultMap="htmlcomponentBeanResult">
+	    <include refid="selectHtmlcomponentBeanSql"/> 
+	     <![CDATA[
+		 , mkc_htmlcomponent t1 where t1.id=#id# and t1.id=t.parentId
+		]]>  
+	</select>
+	
+	<select id="getPareneHtmlComponents" parameterClass="Long" resultMap="htmlcomponentBeanResult">
+	    <include refid="selectHtmlcomponentBeanSql"/>
+		<![CDATA[
+			,mkc_htmlcomponent t1 where t1.id=#id# and t.id=t1.parentid
+		]]>
+	</select>
+	
+	<select id="getHtmlComponentItem" resultMap="htmlComponentItemResult">
+		<![CDATA[
+			SELECT DISTINCT(m.name) NAME, t.mkcmapping MKCMAPPING, t.type TYPE,t.properties PROPERTIES
+			FROM mkc_htmlcomponent m, mkc_item t 
+			WHERE m.itemid = t.id AND m.name != ''
+			  and t.type in ('condition', 'right')
+		]]>
+	</select>
+	
+</sqlMap>

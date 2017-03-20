@@ -567,7 +567,7 @@
 	<xsl:copy/>
 </xsl:template>
 
-<xsl:template match="/sqlMap/typeAlias|statement|cacheModel|dynamic|isPropertyAvailable|isNotPropertyAvailable|isNotParameterPresent|isParameterPresent|/sqlMapConfig/properties">
+<xsl:template match="/sqlMap/typeAlias|statement|cacheModel|isPropertyAvailable|isNotPropertyAvailable|isNotParameterPresent|isParameterPresent|/sqlMapConfig/properties">
 	<xsl:comment>
 		Sorry, I can`t migrate	<xsl:value-of select="@*"/>
 		See console output for further details 
